@@ -4,9 +4,9 @@ from pathvalidate import sanitize_filename
 from bs4 import BeautifulSoup
 
 
-def get_title(main_url, id):
-    url = "{}b{}/".format(main_url, id)
-    response = requests.get(url)
+def get_title(url, id):
+#    url = "{}b{}/".format(url, id)
+    response = requests.get("{}b{}/".format(url, id))
     response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
     title, author = soup.find('h1').text.split("::")
@@ -17,7 +17,7 @@ def get_title(main_url, id):
     return title
 
 
-def download_txt(main_url, id, folder='books/'):
+def download_txt(url, id, folder='books/'):
     """Функция для скачивания текстовых файлов.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
@@ -26,12 +26,12 @@ def download_txt(main_url, id, folder='books/'):
     Returns:
         str: Путь до файла, куда сохранён текст.
     """
-    url = "{}txt.php".format(main_url)
+#    url = "{}txt.php".format(main_url)
     payload = {"id": id}
-    response = requests.get(url, params=payload)
+    response = requests.get("{}txt.php".format(url), params=payload)
     response.raise_for_status()
     if not response.history:
-        filename = '{}. {}.txt'.format(id, sanitize_filename(get_title(main_url, id)))
+        filename = '{}. {}.txt'.format(id, sanitize_filename(get_title(url, id)))
         file_path = os.path.join(folder, filename)
 #        print(file_path)
         if not os.path.exists(folder):
@@ -41,7 +41,7 @@ def download_txt(main_url, id, folder='books/'):
 
 
 if __name__ == '__main__':
-    main_url = "https://tululu.org/"
+    url = "https://tululu.org/"
     folder = 'books/'
     for index in range(1, 11):
-        download_txt(main_url, str(index), folder)
+        download_txt(url, str(index), folder)
