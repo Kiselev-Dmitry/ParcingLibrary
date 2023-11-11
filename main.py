@@ -20,8 +20,9 @@ def download_txt(url, id, folder='books/'):
     response.raise_for_status()
     if not response.history:
         file_name = '{}. {}.txt'.format(id, sanitize_filename(get_title(url, id)))
-        save_file(response, file_name, folder)
-        download_image(url, id)
+#        save_file(response, file_name, folder)
+#        download_image(url, id)
+        get_genres(url, id)
 
 
 def get_title(url, id):
@@ -44,7 +45,18 @@ def download_image(url, id):
     dir_name, file_name = os.path.split(image)
     response = requests.get(image_url)
     response.raise_for_status()
-    save_file(response, file_name, "images")
+#    save_file(response, file_name, "images")
+
+
+def get_genres(url, id):
+    response = requests.get("{}b{}/".format(url, id))
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, 'lxml')
+    genres_elements = soup.find("span", class_="d_book").find_all("a")
+    genres = []
+    for element in genres_elements:
+        genres.append(element.text)
+    print(genres)
 
 
 def save_file(response, file_name, folder):
