@@ -66,18 +66,18 @@ def main():
         description='Скачивание книг и информации о них'
     )
     parser.add_argument(
-        'start_page', help='С какой страницы скачивать',
+        '-start_id', help='С какой страницы скачивать',
         type=int, default=1,
     )
     parser.add_argument(
-        'end_page', help='До какой страницы скачивать',
+        '-end_id', help='До какой страницы скачивать',
         type=int, default=0
     )
     args = parser.parse_args()
-    if args.end_page == 0:
-        args.end_page = args.start_page + 1
+    if args.end_id == 0:
+        args.end_id = args.start_id + 1
 
-    for index in range(args.start_page, args.end_page):
+    for index in range(args.start_id, args.end_id+1):
         download_txt(url, str(index), folder)
 
 
