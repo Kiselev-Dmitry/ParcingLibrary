@@ -1,4 +1,4 @@
-# Library-parsing
+# ParsingLibrary
 Парсинг онлайн-библиотеки [tululu](https://tululu.org/) и скачивание книг.
 
 ## Как установить
