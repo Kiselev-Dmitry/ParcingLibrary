@@ -1,9 +1,9 @@
 import requests
 import os
+import argparse
 from pathvalidate import sanitize_filename
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from urllib.parse import urlparse
 
 
 def parse_book_page(url, id):
@@ -15,32 +15,25 @@ def parse_book_page(url, id):
         title, author = soup.find('h1').text.split("::")
         title = title.strip()
         author = author.strip()
-        print("Заголовок: ", title)
-        print("Автор: ", author)
 
         genres_elements = soup.find("span", class_="d_book").find_all("a")
         genres = []
         for element in genres_elements:
             genres.append(element.text)
-        print("Жанр: ", genres)
 
         image = soup.find(class_='bookimage').find('img')['src']
         image_url = urljoin(url, image)
         image_dir, image_name = os.path.split(image)
-        print("Ссылка на картинку: ", image_url) # отладочный код
+
+        print("Заголовок: ", title)
+        print("Автор: ", author)
+        print("Жанр: ", genres)
+        print("Ссылка на картинку: ", image_url)
 
         return title, image_name, image_url
 
 
 def download_txt(url, id, folder='books/'):
-    """Функция для скачивания текстовых файлов.
-    Args:
-        url (str): Cсылка на текст, который хочется скачать.
-        filename (str): Имя файла, с которым сохранять.
-        folder (str): Папка, куда сохранять.
-    Returns:
-        str: Путь до файла, куда сохранён текст.
-    """
     payload = {"id": id}
     response = requests.get("{}txt.php".format(url), params=payload)
     response.raise_for_status()
@@ -66,15 +59,27 @@ def save_file(response, file_name, folder):
         file.write(response.content)
 
 
-# def main():
-#     url = "https://tululu.org/"
-#     folder = 'books/'
-#     for index in range(1, 11):
-#        download_txt(url, str(index), folder)
+def main():
+    url = "https://tululu.org/"
+    folder = 'books/'
+    parser = argparse.ArgumentParser(
+        description='Скачивание книг и информации о них'
+    )
+    parser.add_argument(
+        'start_page', help='С какой страницы скачивать',
+        type=int, default=1,
+    )
+    parser.add_argument(
+        'end_page', help='До какой страницы скачивать',
+        type=int, default=0
+    )
+    args = parser.parse_args()
+    if args.end_page == 0:
+        args.end_page = args.start_page + 1
+
+    for index in range(args.start_page, args.end_page):
+        download_txt(url, str(index), folder)
 
 
 if __name__ == '__main__':
-    url = "https://tululu.org/"
-    folder = 'books/'
-    for index in range(1, 11):
-       download_txt(url, str(index), folder)
+    main()
