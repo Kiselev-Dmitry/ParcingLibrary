@@ -74,7 +74,7 @@ def main():
         type=int, default=0
     )
     args = parser.parse_args()
-    if args.end_id == 0:
+    if not args.end_id:
         args.end_id = args.start_id + 1
 
     for index in range(args.start_id, args.end_id+1):
