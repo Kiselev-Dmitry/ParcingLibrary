@@ -21,7 +21,6 @@ def parse_book_page(response, url, index):
     author = author.strip()
 
     genres_elements = soup.find("span", class_="d_book").find_all("a")
-    genres = []
     genres = [element.text for element in genres_elements]
 
     image = soup.find(class_='bookimage').find('img')['src']
@@ -31,25 +30,22 @@ def parse_book_page(response, url, index):
     return title, author, genres, image_name, image_url
 
 
-def download_txt(url, index, title, folder='books/'):
+def download_txt(url, index, title, books_folder):
     payload = {"id": index}
     response = requests.get("{}txt.php".format(url), params=payload)
     response.raise_for_status()
     check_for_redirect(response)
     file_name = '{}. {}.txt'.format(index, sanitize_filename(title))
-    save_file(response, file_name, folder)
+    save_file(response, file_name, books_folder)
 
 
-def download_image(image_name, image_url, index):
-    image_folder = "images"
+def download_image(image_name, image_url, image_folder):
     response = requests.get(image_url)
     response.raise_for_status()
     save_file(response, image_name, image_folder)
 
 
 def save_file(response, file_name, folder):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
     file_path = os.path.join(folder, file_name)
     with open(file_path, 'wb') as file:
         file.write(response.content)
@@ -57,7 +53,10 @@ def save_file(response, file_name, folder):
 
 def main():
     url = "https://tululu.org/"
-    folder = 'books/'
+    books_folder = "books"
+    image_folder = "images"
+    os.makedirs(books_folder, exist_ok=True)
+    os.makedirs(image_folder, exist_ok=True)
     parser = argparse.ArgumentParser(
         description='Скачивание книг и информации о них'
     )
@@ -80,8 +79,8 @@ def main():
                 response.raise_for_status()
                 check_for_redirect(response)
                 title, author, genres, image_name, image_url = parse_book_page(response, url, str(index))
-                download_txt(url, str(index), title, folder)
-                download_image(image_name, image_url, index)
+                download_txt(url, str(index), title, books_folder)
+                download_image(image_name, image_url, image_folder)
                 print("Заголовок: ", title)
                 print("Автор: ", author)
                 print("Жанр: ", genres)
