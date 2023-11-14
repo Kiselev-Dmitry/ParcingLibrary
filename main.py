@@ -2,6 +2,7 @@ import requests
 import os
 import argparse
 import logging
+import time
 from pathvalidate import sanitize_filename
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
@@ -92,6 +93,9 @@ def main():
             except requests.HTTPError as error:
                 logging.warning(error)
                 break
+            except requests.ConnectionError as error:
+                logging.error(error)
+                time.sleep(5)
             break
 
 if __name__ == '__main__':
