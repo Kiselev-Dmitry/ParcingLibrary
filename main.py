@@ -6,45 +6,40 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 
-def parse_book_page(url, id):
-    response = requests.get("{}b{}/".format(url, id))
-    response.raise_for_status()
-    if not response.history:
-        soup = BeautifulSoup(response.text, 'lxml')
+def parse_book_page(response, url, index):
+    soup = BeautifulSoup(response.text, 'lxml')
 
-        title, author = soup.find('h1').text.split("::")
-        title = title.strip()
-        author = author.strip()
+    title, author = soup.find('h1').text.split("::")
+    title = title.strip()
+    author = author.strip()
 
-        genres_elements = soup.find("span", class_="d_book").find_all("a")
-        genres = []
-        for element in genres_elements:
-            genres.append(element.text)
+    genres_elements = soup.find("span", class_="d_book").find_all("a")
+    genres = []
+    for element in genres_elements:
+        genres.append(element.text)
 
-        image = soup.find(class_='bookimage').find('img')['src']
-        image_url = urljoin(url, image)
-        image_dir, image_name = os.path.split(image)
+    image = soup.find(class_='bookimage').find('img')['src']
+    image_url = urljoin(url, image)
+    image_dir, image_name = os.path.split(image)
 
-        print("Заголовок: ", title)
-        print("Автор: ", author)
-        print("Жанр: ", genres)
-        print("Ссылка на картинку: ", image_url)
+    print("Заголовок: ", title)
+    print("Автор: ", author)
+    print("Жанр: ", genres)
+    print("Ссылка на картинку: ", image_url)
 
-        return title, image_name, image_url
+    return title, image_name, image_url
 
 
-def download_txt(url, id, folder='books/'):
-    payload = {"id": id}
+def download_txt(url, index, title, folder='books/'):
+    payload = {"id": index}
     response = requests.get("{}txt.php".format(url), params=payload)
     response.raise_for_status()
     if not response.history:
-        title, image_name, image_url = parse_book_page(url, str(id))
-        file_name = '{}. {}.txt'.format(id, sanitize_filename(title))
+        file_name = '{}. {}.txt'.format(index, sanitize_filename(title))
         save_file(response, file_name, folder)
-        download_image(image_name, image_url, id)
 
 
-def download_image(image_name, image_url, id):
+def download_image(image_name, image_url, index):
     image_folder = "images"
     response = requests.get(image_url)
     response.raise_for_status()
@@ -78,7 +73,12 @@ def main():
         args.end_id = args.start_id + 1
 
     for index in range(args.start_id, args.end_id+1):
-        download_txt(url, str(index), folder)
+        response = requests.get("{}b{}/".format(url, index))
+        response.raise_for_status()
+        if not response.history:
+            title, image_name, image_url = parse_book_page(response, url, str(index))
+            download_txt(url, str(index), title, folder)
+            download_image(image_name, image_url, index)
 
 
 if __name__ == '__main__':
