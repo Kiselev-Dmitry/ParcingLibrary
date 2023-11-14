@@ -1,9 +1,15 @@
 import requests
 import os
 import argparse
+import logging
 from pathvalidate import sanitize_filename
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+
+
+def check_for_redirect(response):
+    if response.history:
+        raise requests.HTTPError("Page was redirected to Main library page.")
 
 
 def parse_book_page(response, url, index):
@@ -34,9 +40,10 @@ def download_txt(url, index, title, folder='books/'):
     payload = {"id": index}
     response = requests.get("{}txt.php".format(url), params=payload)
     response.raise_for_status()
-    if not response.history:
-        file_name = '{}. {}.txt'.format(index, sanitize_filename(title))
-        save_file(response, file_name, folder)
+    # if not response.history:
+    check_for_redirect(response)
+    file_name = '{}. {}.txt'.format(index, sanitize_filename(title))
+    save_file(response, file_name, folder)
 
 
 def download_image(image_name, image_url, index):
@@ -73,13 +80,19 @@ def main():
         args.end_id = args.start_id + 1
 
     for index in range(args.start_id, args.end_id+1):
-        response = requests.get("{}b{}/".format(url, index))
-        response.raise_for_status()
-        if not response.history:
-            title, image_name, image_url = parse_book_page(response, url, str(index))
-            download_txt(url, str(index), title, folder)
-            download_image(image_name, image_url, index)
-
+        while True:
+            try:
+                response = requests.get("{}b{}/".format(url, index))
+                response.raise_for_status()
+                check_for_redirect(response)
+                # if not response.history:
+                title, image_name, image_url = parse_book_page(response, url, str(index))
+                download_txt(url, str(index), title, folder)
+                download_image(image_name, image_url, index)
+            except requests.HTTPError as error:
+                logging.warning(error)
+                break
+            break
 
 if __name__ == '__main__':
     main()
