@@ -22,8 +22,7 @@ def parse_book_page(response, url, index):
 
     genres_elements = soup.find("span", class_="d_book").find_all("a")
     genres = []
-    for element in genres_elements:
-        genres.append(element.text)
+    genres = [element.text for element in genres_elements]
 
     image = soup.find(class_='bookimage').find('img')['src']
     image_url = urljoin(url, image)
@@ -41,7 +40,6 @@ def download_txt(url, index, title, folder='books/'):
     payload = {"id": index}
     response = requests.get("{}txt.php".format(url), params=payload)
     response.raise_for_status()
-    # if not response.history:
     check_for_redirect(response)
     file_name = '{}. {}.txt'.format(index, sanitize_filename(title))
     save_file(response, file_name, folder)
@@ -86,7 +84,6 @@ def main():
                 response = requests.get("{}b{}/".format(url, index))
                 response.raise_for_status()
                 check_for_redirect(response)
-                # if not response.history:
                 title, image_name, image_url = parse_book_page(response, url, str(index))
                 download_txt(url, str(index), title, folder)
                 download_image(image_name, image_url, index)
