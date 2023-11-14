@@ -28,12 +28,7 @@ def parse_book_page(response, url, index):
     image_url = urljoin(url, image)
     image_dir, image_name = os.path.split(image)
 
-    print("Заголовок: ", title)
-    print("Автор: ", author)
-    print("Жанр: ", genres)
-    print("Ссылка на картинку: ", image_url)
-
-    return title, image_name, image_url
+    return title, author, genres, image_name, image_url
 
 
 def download_txt(url, index, title, folder='books/'):
@@ -84,9 +79,13 @@ def main():
                 response = requests.get("{}b{}/".format(url, index))
                 response.raise_for_status()
                 check_for_redirect(response)
-                title, image_name, image_url = parse_book_page(response, url, str(index))
+                title, author, genres, image_name, image_url = parse_book_page(response, url, str(index))
                 download_txt(url, str(index), title, folder)
                 download_image(image_name, image_url, index)
+                print("Заголовок: ", title)
+                print("Автор: ", author)
+                print("Жанр: ", genres)
+                print("Ссылка на картинку: ", image_url)
             except requests.HTTPError as error:
                 logging.warning(error)
                 break
