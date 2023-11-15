@@ -13,7 +13,7 @@ def check_for_redirect(response):
         raise requests.HTTPError("Page was redirected to Main library page.")
 
 
-def parse_book_page(response, url, index):
+def parse_book_page(response):
     soup = BeautifulSoup(response.text, 'lxml')
 
     title, author = soup.find('h1').text.split("::")
@@ -24,7 +24,7 @@ def parse_book_page(response, url, index):
     genres = [element.text for element in genres_elements]
 
     image = soup.find(class_='bookimage').find('img')['src']
-    image_url = urljoin(url, image)
+    image_url = urljoin(response.url, image)
     image_dir, image_name = os.path.split(image)
 
     return title, author, genres, image_name, image_url
@@ -78,8 +78,8 @@ def main():
                 response = requests.get("{}b{}/".format(url, index))
                 response.raise_for_status()
                 check_for_redirect(response)
-                title, author, genres, image_name, image_url = parse_book_page(response, url, str(index))
-                download_txt(url, str(index), title, books_folder)
+                title, author, genres, image_name, image_url = parse_book_page(response)
+                download_txt(url, index, title, books_folder)
                 download_image(image_name, image_url, image_folder)
                 print("Заголовок: ", title)
                 print("Автор: ", author)
