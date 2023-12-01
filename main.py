@@ -27,7 +27,19 @@ def parse_book_page(response):
     image_url = urljoin(response.url, image)
     image_dir, image_name = os.path.split(image)
 
-    return title, author, genres, image_name, image_url
+    comments_elements = soup.select(".texts span")
+    comments = [comment.text for comment in comments_elements]
+
+    # return title, author, genres, image_name, image_url
+    return {
+        "title": title,
+        "author": author,
+        "comments": comments,
+        "genres": genres,
+        "image_name": image_name,
+        "image_url": image_url,
+        # "txt_url": txt_url
+    }
 
 
 def download_txt(url, index, title, books_folder):
