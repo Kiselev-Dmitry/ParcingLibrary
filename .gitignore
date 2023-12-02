@@ -152,4 +152,5 @@ cython_debug/
 .idea/
 books/
 images/
-
+books.json
+books_inventory.json

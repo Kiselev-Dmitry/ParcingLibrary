@@ -1,12 +1,12 @@
 import os
 import argparse
+import json
 import logging
 import time
-import json
 
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin
 from pathvalidate import sanitize_filename
 
 
@@ -75,7 +75,7 @@ def add_args():
     )
     parser.add_argument(
         '-end_page', help='До какой страницы скачивать',
-        type=int, default=702
+        type=int, default=701
     )
     parser.add_argument(
         '-dest_fold', help='Путь к папке с книгами, картинками и JSON',
@@ -103,48 +103,54 @@ def main():
     os.makedirs(books_folder, exist_ok=True)
     os.makedirs(image_folder, exist_ok=True)
 
-    for page in range(args.start_page, args.end_page):
-        response = requests.get("https://tululu.org/l55/{}".format(str(page)))
-        response.raise_for_status()
-        check_for_redirect(response)
+    for page in range(args.start_page, args.end_page+1):
+        while True:
+            try:
+                response = requests.get("https://tululu.org/l55/{}".format(str(page)))
+                response.raise_for_status()
+                check_for_redirect(response)
 
-        soup = BeautifulSoup(response.text, 'lxml')
-        book_tags = soup.select(".d_book")
-        for book_tag in book_tags:
-            book_href = book_tag.select_one("a")["href"]
-            book_url = urljoin("https://tululu.org", book_href)
-            print(book_url) # отладочный принт
+                soup = BeautifulSoup(response.text, 'lxml')
+                book_tags = soup.select(".d_book")
+                for book_tag in book_tags:
+                    book_href = book_tag.select_one("a")["href"]
+                    book_url = urljoin("https://tululu.org", book_href)
 
-            response = requests.get(book_url)
-            response.raise_for_status()
-            check_for_redirect(response)
-            book_info = parse_book_page(response)
+                    response = requests.get(book_url)
+                    response.raise_for_status()
+                    check_for_redirect(response)
+                    book_info = parse_book_page(response)
 
-            # book_path = download_txt(book_url, index, book_info["title"], books_folder)
-            if not args.skip_txt:
-                book_path = download_txt(book_url, index, book_info["title"], books_folder)
-            else:
-                book_path = None
-            # image_path = download_image(book_info["image_name"], book_info["image_url"], image_folder)
-            if not args.skip_imgs:
-                image_path = download_image(book_info["image_name"], book_info["image_url"], image_folder)
-            else:
-                image_path = None
+                    if not args.skip_txt:
+                        book_path = download_txt(book_url, index, book_info["title"], books_folder)
+                    else:
+                        book_path = None
+                    if not args.skip_imgs:
+                        image_path = download_image(book_info["image_name"], book_info["image_url"], image_folder)
+                    else:
+                        image_path = None
 
-            books.append({
-                "title": book_info["title"],
-                "author": book_info["author"],
-                "book_path": book_path,
-                "image_path": image_path,
-                "genres": book_info["genres"],
-                "comments": book_info["comments"]
-            })
-            index += 1
+                    books.append({
+                        "title": book_info["title"],
+                        "author": book_info["author"],
+                        "book_path": book_path,
+                        "image_path": image_path,
+                        "genres": book_info["genres"],
+                        "comments": book_info["comments"]
+                    })
+                    index += 1
 
-        books_json = json.dumps(books, ensure_ascii=False)
-        with open(os.path.join(args.dest_fold,"books_inventory.json"), "w", encoding="UTF-8") as my_file:
-            my_file.write(books_json)
+                books_json = json.dumps(books, ensure_ascii=False)
+                with open(os.path.join(args.dest_fold,"books_inventory.json"), "w", encoding="UTF-8") as my_file:
+                    my_file.write(books_json)
 
+            except requests.HTTPError as error:
+                logging.warning(error)
+                break
+            except requests.ConnectionError as error:
+                logging.error(error)
+                time.sleep(5)
+            break
 
 if __name__ == '__main__':
     main()
