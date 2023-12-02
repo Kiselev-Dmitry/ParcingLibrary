@@ -72,7 +72,25 @@ def main():
     os.makedirs(image_folder, exist_ok=True)
     books = []
     index = 1
-    for page in range(1, 2):  # ЗАМЕНИТЬ !!!
+
+    parser = argparse.ArgumentParser(
+        description='Скачивание книг и информации о них'
+    )
+    parser.add_argument(
+        '-start_page', help='С какой страницы скачивать',
+        type=int, default=1,
+    )
+    parser.add_argument(
+        '-end_page', help='До какой страницы скачивать',
+        type=int, default=0
+    )
+    args = parser.parse_args()
+    if not args.start_page:
+        args.end_start = 1
+    if not args.end_page:
+        args.end_page = 702
+
+    for page in range(args.start_page, args.end_page):
         response = requests.get("https://tululu.org/l55/{}".format(str(page)))
         response.raise_for_status()
         check_for_redirect(response)
