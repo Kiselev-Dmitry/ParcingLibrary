@@ -65,14 +65,7 @@ def save_file(response, file_path):
         file.write(response.content)
 
 
-def main():
-    books_folder = "books"
-    image_folder = "images"
-    os.makedirs(books_folder, exist_ok=True)
-    os.makedirs(image_folder, exist_ok=True)
-    books = []
-    index = 1
-
+def add_args():
     parser = argparse.ArgumentParser(
         description='Скачивание книг и информации о них'
     )
@@ -82,13 +75,33 @@ def main():
     )
     parser.add_argument(
         '-end_page', help='До какой страницы скачивать',
-        type=int, default=0
+        type=int, default=702
+    )
+    parser.add_argument(
+        '-dest_fold', help='Путь к папке с книгами, картинками и JSON',
+        default=""
+    )
+    parser.add_argument(
+        '-skip_imgs', help='Пропускать ли скачивание картинок книг',
+        action='store_true',
+    )
+    parser.add_argument(
+        '-skip_txt', help='Пропускать ли скачивание книг',
+        action='store_true',
     )
     args = parser.parse_args()
-    if not args.start_page:
-        args.end_start = 1
-    if not args.end_page:
-        args.end_page = 702
+    return args
+
+
+def main():
+    books = []
+    index = 1
+    args = add_args()
+
+    books_folder = os.path.join(args.dest_fold, "books")
+    image_folder = os.path.join(args.dest_fold, "images")
+    os.makedirs(books_folder, exist_ok=True)
+    os.makedirs(image_folder, exist_ok=True)
 
     for page in range(args.start_page, args.end_page):
         response = requests.get("https://tululu.org/l55/{}".format(str(page)))
@@ -107,9 +120,16 @@ def main():
             check_for_redirect(response)
             book_info = parse_book_page(response)
 
-            book_path = download_txt(book_url, index, book_info["title"], books_folder)
-
-            image_path = download_image(book_info["image_name"], book_info["image_url"], image_folder)
+            # book_path = download_txt(book_url, index, book_info["title"], books_folder)
+            if not args.skip_txt:
+                book_path = download_txt(book_url, index, book_info["title"], books_folder)
+            else:
+                book_path = None
+            # image_path = download_image(book_info["image_name"], book_info["image_url"], image_folder)
+            if not args.skip_imgs:
+                image_path = download_image(book_info["image_name"], book_info["image_url"], image_folder)
+            else:
+                image_path = None
 
             books.append({
                 "title": book_info["title"],
@@ -122,7 +142,7 @@ def main():
             index += 1
 
         books_json = json.dumps(books, ensure_ascii=False)
-        with open("books.json", "w", encoding="UTF-8") as my_file:
+        with open(os.path.join(args.dest_fold,"books_inventory.json"), "w", encoding="UTF-8") as my_file:
             my_file.write(books_json)
 
 
