@@ -17,15 +17,15 @@ def check_for_redirect(response):
 
 def parse_book_page(response):
     soup = BeautifulSoup(response.text, 'lxml')
-
-    title, author = soup.find('h1').text.split("::")
+    title, author = soup.select_one('h1').text.split("::")
     title = title.strip()
     author = author.strip()
 
-    genres_elements = soup.find("span", class_="d_book").find_all("a")
+    genres_elements = soup.select("span.d_book a")
     genres = [element.text for element in genres_elements]
 
-    image = soup.find(class_='bookimage').find('img')['src']
+    image_tag = soup.select_one(".bookimage a img")
+    image = image_tag["src"]
     image_url = urljoin(response.url, image)
     image_dir, image_name = os.path.split(image)
 
@@ -72,24 +72,22 @@ def main():
     os.makedirs(image_folder, exist_ok=True)
     books = []
     index = 1
-    for page in range(1, 2):
+    for page in range(1, 2):  # ЗАМЕНИТЬ !!!
         response = requests.get("https://tululu.org/l55/{}".format(str(page)))
         response.raise_for_status()
         check_for_redirect(response)
 
         soup = BeautifulSoup(response.text, 'lxml')
-        book_tags = soup.find_all(class_="d_book")
-        # print(book_tags)
+        book_tags = soup.select(".d_book")
         for book_tag in book_tags:
-            book_href = book_tag.find("a")["href"]
+            book_href = book_tag.select_one("a")["href"]
             book_url = urljoin("https://tululu.org", book_href)
-            # print(book_url)
+            print(book_url) # отладочный принт
 
             response = requests.get(book_url)
             response.raise_for_status()
             check_for_redirect(response)
             book_info = parse_book_page(response)
-            # print(book_info)
 
             book_path = download_txt(book_url, index, book_info["title"], books_folder)
 
@@ -105,7 +103,6 @@ def main():
             })
             index += 1
 
-        # print(books)
         books_json = json.dumps(books, ensure_ascii=False)
         with open("books.json", "w", encoding="UTF-8") as my_file:
             my_file.write(books_json)
