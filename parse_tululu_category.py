@@ -103,10 +103,10 @@ def main():
     os.makedirs(books_folder, exist_ok=True)
     os.makedirs(image_folder, exist_ok=True)
 
-    for page in range(args.start_page, args.end_page+1):
+    for page_num in range(args.start_page, args.end_page+1):
         while True:
             try:
-                response = requests.get("https://tululu.org/l55/{}".format(str(page)))
+                response = requests.get("https://tululu.org/l55/{}".format(str(page_num)))
                 response.raise_for_status()
                 check_for_redirect(response)
 
