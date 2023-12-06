@@ -140,9 +140,6 @@ def main():
                     })
                     index += 1
 
-                with open(os.path.join(args.dest_fold,"books_inventory.json"), "w", encoding="UTF-8") as file:
-                    json.dump(books, file, ensure_ascii=False)
-
             except requests.HTTPError as error:
                 logging.warning(error)
                 break
@@ -150,6 +147,10 @@ def main():
                 logging.error(error)
                 time.sleep(5)
             break
+
+    with open(os.path.join(args.dest_fold, "books_inventory.json"), "w", encoding="UTF-8") as file:
+        json.dump(books, file, ensure_ascii=False)
+
 
 if __name__ == '__main__':
     main()
