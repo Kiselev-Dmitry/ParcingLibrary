@@ -119,24 +119,24 @@ def main():
                     response = requests.get(book_url)
                     response.raise_for_status()
                     check_for_redirect(response)
-                    book_info = parse_book_page(response)
+                    book_params = parse_book_page(response)
 
                     if not args.skip_txt:
-                        book_path = download_txt(book_url, index, book_info["title"], books_folder)
+                        book_path = download_txt(book_url, index, book_params["title"], books_folder)
                     else:
                         book_path = None
                     if not args.skip_imgs:
-                        image_path = download_image(book_info["image_name"], book_info["image_url"], image_folder)
+                        image_path = download_image(book_params["image_name"], book_params["image_url"], image_folder)
                     else:
                         image_path = None
 
                     books.append({
-                        "title": book_info["title"],
-                        "author": book_info["author"],
+                        "title": book_params["title"],
+                        "author": book_params["author"],
                         "book_path": book_path,
                         "image_path": image_path,
-                        "genres": book_info["genres"],
-                        "comments": book_info["comments"]
+                        "genres": book_params["genres"],
+                        "comments": book_params["comments"]
                     })
                     index += 1
 
