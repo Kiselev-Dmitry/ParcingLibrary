@@ -140,9 +140,8 @@ def main():
                     })
                     index += 1
 
-                books_json = json.dumps(books, ensure_ascii=False)
                 with open(os.path.join(args.dest_fold,"books_inventory.json"), "w", encoding="UTF-8") as my_file:
-                    my_file.write(books_json)
+                    json.dump(books, my_file, ensure_ascii=False)
 
             except requests.HTTPError as error:
                 logging.warning(error)
