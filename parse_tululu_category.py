@@ -115,8 +115,8 @@ def main():
                 for book_tag in book_tags:
                     try:
                         book_href = book_tag.select_one("a")["href"]
-                        book_url = urljoin("https://tululu.org", book_href)
 
+                        book_url = urljoin("https://tululu.org/l55", book_href)
                         response = requests.get(book_url)
                         response.raise_for_status()
                         check_for_redirect(response)
